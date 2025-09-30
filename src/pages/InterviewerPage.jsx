@@ -6,8 +6,6 @@ import { Document, Page, pdfjs } from 'react-pdf';
 import StatCard from '/src/components/StatCard.jsx';
 import { resetCurrentInterview, setSelectedModel } from '/src/app/interviewSlice.js';
 
-// This line is crucial for the PDF viewer in the modal to work correctly.
-// It assumes you have pdf.worker.min.js in your /public folder.
 pdfjs.GlobalWorkerOptions.workerSrc = `/pdf.worker.min.js`;
 
 const { Title, Text } = Typography;
@@ -23,27 +21,14 @@ function InterviewerPage() {
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [numPages, setNumPages] = useState(null);
 
-  const onDocumentLoadSuccess = ({ numPages }) => {
-    setNumPages(numPages);
-  };
-
+  const onDocumentLoadSuccess = ({ numPages }) => setNumPages(numPages);
   const handleShowDetails = (candidate) => {
     setSelectedCandidate(candidate);
     setDetailsVisible(true);
   };
-
-  const handleCloseDetails = () => {
-    setDetailsVisible(false);
-    setSelectedCandidate(null);
-  };
-  
-  const handleReset = () => {
-    dispatch(resetCurrentInterview());
-  };
-
-  const handleModelChange = (value) => {
-    dispatch(setSelectedModel(value));
-  };
+  const handleCloseDetails = () => setDetailsVisible(false);
+  const handleReset = () => dispatch(resetCurrentInterview());
+  const handleModelChange = (value) => dispatch(setSelectedModel(value));
 
   const columns = [
     { title: 'Candidate Name', dataIndex: 'name', key: 'name' },
@@ -66,8 +51,6 @@ function InterviewerPage() {
               <Option value="gemini-pro">Gemini Pro (Stable)</Option>
               <Option value="gemini-1.5-flash-latest">Gemini 1.5 Flash (Fast)</Option>
               <Option value="gemini-1.5-pro-latest">Gemini 1.5 Pro (Advanced)</Option>
-                <Option value="gemini-2.5-flash">Gemini 2.5 Flash (Fast)</Option>
-                <Option value="gemini-2.5-pro">Gemini 2.5 Pro (Advanced)</Option>
             </Select>
             <Button type="primary" icon={<PlusOutlined />} onClick={handleReset}>Start New Interview</Button>
           </Space>
@@ -77,7 +60,7 @@ function InterviewerPage() {
         <Col xs={24} sm={12} md={12} lg={6}><StatCard icon={UserOutlined} title="Total Candidates" value={candidates.length} color="#1890ff" /></Col>
         <Col xs={24} sm={12} md={12} lg={6}><StatCard icon={CheckCircleOutlined} title="Completed" value={candidates.filter(c => c.summary).length} color="#52c41a" /></Col>
       </Row>
-      <Card variant="borderless">
+      <Card>
         <Space direction="vertical" size="middle" style={{ width: '100%' }}>
           <Row justify="space-between" align="middle">
             <Col><Text strong>Candidates ({filteredCandidates.length})</Text></Col>
@@ -121,3 +104,4 @@ function InterviewerPage() {
   );
 }
 export default InterviewerPage;
+
