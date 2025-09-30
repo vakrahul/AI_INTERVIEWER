@@ -1,0 +1,4 @@
+.clickable-row:hover {
+  cursor: pointer;
+  background-color: #111 !important;
+}
