@@ -22,9 +22,17 @@ function InterviewerPage() {
   const [numPages, setNumPages] = useState(null);
   const [showSplash, setShowSplash] = useState(false);
   const [pageLoaded, setPageLoaded] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   useEffect(() => {
     setPageLoaded(true);
+    
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const onDocumentLoadSuccess = ({ numPages }) => {
@@ -80,38 +88,47 @@ function InterviewerPage() {
           <Avatar icon={<UserOutlined />} style={{ backgroundColor: '#1890ff' }} />
           <Text strong>{name || 'N/A'}</Text>
         </Space>
-      )
+      ),
+      responsive: ['xs', 'sm', 'md', 'lg', 'xl']
     },
-    { title: 'Email', dataIndex: 'email', key: 'email' },
+    { 
+      title: 'Email', 
+      dataIndex: 'email', 
+      key: 'email',
+      responsive: ['md', 'lg', 'xl']
+    },
     { 
       title: 'Final Score', 
       dataIndex: 'finalScore', 
       key: 'finalScore', 
       render: (score) => score !== undefined ? (
-        <Tag color={getScoreColor(score)} style={{ fontSize: '14px', padding: '4px 12px' }}>
-          <TrophyOutlined /> {score} / 100
+        <Tag color={getScoreColor(score)} style={{ fontSize: isMobile ? '12px' : '14px', padding: isMobile ? '2px 8px' : '4px 12px' }}>
+          <TrophyOutlined /> {score}
         </Tag>
       ) : (
         <Tag color="default">Pending</Tag>
       ),
-      sorter: (a, b) => (a.finalScore ?? 0) - (b.finalScore ?? 0)
+      sorter: (a, b) => (a.finalScore ?? 0) - (b.finalScore ?? 0),
+      responsive: ['sm', 'md', 'lg', 'xl']
     },
     { 
       title: 'Status', 
       dataIndex: 'status', 
       key: 'status',
       render: (status) => (
-        <Badge status={getStatusColor(status) === 'success' ? 'success' : getStatusColor(status) === 'processing' ? 'processing' : 'default'} text={status} />
-      )
+        <Badge status={getStatusColor(status) === 'success' ? 'success' : getStatusColor(status) === 'processing' ? 'processing' : 'default'} text={isMobile ? '' : status} />
+      ),
+      responsive: ['xs', 'sm', 'md', 'lg', 'xl']
     },
     {
       title: 'Action',
       key: 'action',
       render: (_, record) => (
-        <Button type="link" icon={<FileTextOutlined />} onClick={(e) => { e.stopPropagation(); handleShowDetails(record); }}>
-          View Details
+        <Button type="link" icon={<FileTextOutlined />} onClick={(e) => { e.stopPropagation(); handleShowDetails(record); }} size={isMobile ? 'small' : 'middle'}>
+          {isMobile ? '' : 'View'}
         </Button>
-      )
+      ),
+      responsive: ['xs', 'sm', 'md', 'lg', 'xl']
     }
   ];
 
@@ -183,6 +200,21 @@ function InterviewerPage() {
             transform: scale(1.02);
             transition: transform 0.2s ease;
           }
+          
+          @media (max-width: 768px) {
+            .ant-table {
+              font-size: 12px;
+            }
+            .ant-table-thead > tr > th {
+              padding: 8px 4px;
+            }
+            .ant-table-tbody > tr > td {
+              padding: 8px 4px;
+            }
+            .clickable-row:hover {
+              transform: none;
+            }
+          }
         `}
       </style>
 
@@ -203,27 +235,27 @@ function InterviewerPage() {
           animation: 'fadeIn 0.3s ease-out'
         }}>
           <div style={{
-            fontSize: '64px',
+            fontSize: isMobile ? '48px' : '64px',
             marginBottom: '24px',
             animation: 'pulse 1s ease-in-out infinite'
           }}>
             📄
           </div>
-          <Title level={3} style={{ color: 'white', margin: 0 }}>
+          <Title level={isMobile ? 4 : 3} style={{ color: 'white', margin: 0, padding: '0 20px', textAlign: 'center' }}>
             Loading Candidate Profile...
           </Title>
         </div>
       )}
 
       <div style={{ 
-        padding: '24px',
+        padding: isMobile ? '12px' : '24px',
         animation: pageLoaded ? 'fadeIn 0.6s ease-out' : 'none'
       }}>
         <Space direction="vertical" size="large" style={{ width: '100%' }}>
           {showModelAlert && selectedModel !== 'gemini-2.5-flash' && (
             <Alert
               message="⚡ Recommendation: Use Gemini 2.5 Flash"
-              description="For the best performance and faster response times, we recommend using Gemini 2.5 Flash model. It provides optimal balance between speed and quality for conducting interviews."
+              description={isMobile ? "Use Gemini 2.5 Flash for best performance" : "For the best performance and faster response times, we recommend using Gemini 2.5 Flash model. It provides optimal balance between speed and quality for conducting interviews."}
               type="info"
               showIcon
               closable
@@ -252,22 +284,22 @@ function InterviewerPage() {
             />
           )}
           
-          <Row justify="space-between" align="middle" style={{ animation: 'slideIn 0.6s ease-out' }}>
-            <Col>
-              <Title level={2} style={{ margin: 0, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+          <Row justify="space-between" align="middle" style={{ animation: 'slideIn 0.6s ease-out' }} gutter={[16, 16]}>
+            <Col xs={24} sm={24} md={12}>
+              <Title level={isMobile ? 3 : 2} style={{ margin: 0, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                 🎯 Interviewer Dashboard
               </Title>
               <Text type="secondary">Manage and review all candidate interviews</Text>
             </Col>
-            <Col>
-              <Space>
+            <Col xs={24} sm={24} md={12} style={{ display: 'flex', justifyContent: isMobile ? 'flex-start' : 'flex-end' }}>
+              <Space direction={isMobile ? 'vertical' : 'horizontal'} style={{ width: isMobile ? '100%' : 'auto' }}>
                 <Select 
                   value={selectedModel} 
                   onChange={handleModelChange} 
-                  style={{ width: 220 }}
-                  size="large"
+                  style={{ width: isMobile ? '100%' : 220 }}
+                  size={isMobile ? 'middle' : 'large'}
                 >
-                  <Option value="gemini-pro">🤖 Gemini Pro (Stable)</Option>
+                  <Option value="gemini-pro">🤖 Gemini Pro</Option>
                   <Option value="gemini-1.5-flash-latest">⚡ Gemini 1.5 Flash</Option>
                   <Option value="gemini-1.5-pro-latest">🚀 Gemini 1.5 Pro</Option>
                   <Option value="gemini-2.5-flash">⚡ Gemini 2.5 Flash</Option>
@@ -277,14 +309,15 @@ function InterviewerPage() {
                   type="primary" 
                   icon={<PlusOutlined />} 
                   onClick={handleReset}
-                  size="large"
+                  size={isMobile ? 'middle' : 'large'}
+                  block={isMobile}
                   style={{
                     background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                     border: 'none',
                     transition: 'transform 0.2s ease'
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-                  onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                  onMouseEnter={(e) => !isMobile && (e.currentTarget.style.transform = 'scale(1.05)')}
+                  onMouseLeave={(e) => !isMobile && (e.currentTarget.style.transform = 'scale(1)')}
                 >
                   Start New Interview
                 </Button>
@@ -293,16 +326,16 @@ function InterviewerPage() {
           </Row>
 
           <Row gutter={[16, 16]}>
-            <Col xs={24} sm={12} md={12} lg={6} style={{ animation: 'fadeInUp 0.6s ease-out 0.1s backwards' }}>
+            <Col xs={12} sm={12} md={12} lg={6} style={{ animation: 'fadeInUp 0.6s ease-out 0.1s backwards' }}>
               <StatCard icon={UserOutlined} title="Total Candidates" value={candidates.length} color="#1890ff" />
             </Col>
-            <Col xs={24} sm={12} md={12} lg={6} style={{ animation: 'fadeInUp 0.6s ease-out 0.2s backwards' }}>
+            <Col xs={12} sm={12} md={12} lg={6} style={{ animation: 'fadeInUp 0.6s ease-out 0.2s backwards' }}>
               <StatCard icon={CheckCircleOutlined} title="Completed" value={completedCount} color="#52c41a" />
             </Col>
-            <Col xs={24} sm={12} md={12} lg={6} style={{ animation: 'fadeInUp 0.6s ease-out 0.3s backwards' }}>
+            <Col xs={12} sm={12} md={12} lg={6} style={{ animation: 'fadeInUp 0.6s ease-out 0.3s backwards' }}>
               <StatCard icon={ClockCircleOutlined} title="In Progress" value={candidates.length - completedCount} color="#faad14" />
             </Col>
-            <Col xs={24} sm={12} md={12} lg={6} style={{ animation: 'fadeInUp 0.6s ease-out 0.4s backwards' }}>
+            <Col xs={12} sm={12} md={12} lg={6} style={{ animation: 'fadeInUp 0.6s ease-out 0.4s backwards' }}>
               <StatCard icon={StarOutlined} title="Avg Score" value={avgScore.toFixed(1)} color="#722ed1" />
             </Col>
           </Row>
@@ -315,18 +348,18 @@ function InterviewerPage() {
             }}
           >
             <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-              <Row justify="space-between" align="middle">
-                <Col>
+              <Row justify="space-between" align="middle" gutter={[16, 16]}>
+                <Col xs={24} sm={12}>
                   <Title level={4} style={{ margin: 0 }}>
                     Candidates ({filteredCandidates.length})
                   </Title>
                 </Col>
-                <Col>
+                <Col xs={24} sm={12}>
                   <Search 
                     placeholder="Search candidates..." 
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    style={{ width: 300 }}
-                    size="large"
+                    style={{ width: '100%' }}
+                    size={isMobile ? 'middle' : 'large'}
                     prefix={<SearchOutlined />}
                     className="search-box"
                   />
@@ -341,10 +374,12 @@ function InterviewerPage() {
                   onClick: () => handleShowDetails(record)
                 })} 
                 rowClassName="clickable-row"
+                scroll={{ x: isMobile ? 600 : undefined }}
                 pagination={{ 
                   pageSize: 10,
-                  showSizeChanger: true,
-                  showTotal: (total) => `Total ${total} candidates`
+                  showSizeChanger: !isMobile,
+                  showTotal: (total) => isMobile ? `${total}` : `Total ${total} candidates`,
+                  simple: isMobile
                 }}
                 locale={{
                   emptyText: (
@@ -363,16 +398,16 @@ function InterviewerPage() {
       {selectedCandidate && (
         <Modal 
           title={
-            <Space style={{ width: '100%', justifyContent: 'space-between' }}>
+            <Space direction={isMobile ? 'vertical' : 'horizontal'} style={{ width: '100%', justifyContent: 'space-between' }} size="small">
               <Space>
-                <Avatar size={40} icon={<UserOutlined />} style={{ backgroundColor: '#1890ff' }} />
+                <Avatar size={isMobile ? 32 : 40} icon={<UserOutlined />} style={{ backgroundColor: '#1890ff' }} />
                 <div>
-                  <Title level={4} style={{ margin: 0 }}>{selectedCandidate.name}</Title>
-                  <Text type="secondary">{selectedCandidate.email}</Text>
+                  <Title level={isMobile ? 5 : 4} style={{ margin: 0 }}>{selectedCandidate.name}</Title>
+                  <Text type="secondary" style={{ fontSize: isMobile ? '11px' : '14px' }}>{selectedCandidate.email}</Text>
                 </div>
               </Space>
               {selectedCandidate.finalScore !== undefined && (
-                <Tag color={getScoreColor(selectedCandidate.finalScore)} style={{ fontSize: '16px', padding: '6px 16px' }}>
+                <Tag color={getScoreColor(selectedCandidate.finalScore)} style={{ fontSize: isMobile ? '12px' : '16px', padding: isMobile ? '4px 12px' : '6px 16px' }}>
                   <TrophyOutlined /> {selectedCandidate.finalScore} / 100
                 </Tag>
               )}
@@ -381,98 +416,25 @@ function InterviewerPage() {
           open={detailsVisible} 
           onCancel={handleCloseDetails} 
           footer={null} 
-          width={1200}
-          style={{ top: 20 }}
+          width={isMobile ? '100%' : 1200}
+          style={{ top: isMobile ? 0 : 20, padding: isMobile ? 0 : undefined }}
+          bodyStyle={{ padding: isMobile ? '12px' : '24px' }}
           className="modal-content-animated"
         >
-          <Tabs defaultActiveKey="1" size="large">
-            <TabPane tab={<span><RobotOutlined /> Interview Transcript</span>} key="1">
-              <Space direction="vertical" size="large" style={{ width: '100%' }}>
-                {selectedCandidate.summary && (
-                  <Card 
-                    style={{ 
-                      background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)',
-                      border: '1px solid rgba(102, 126, 234, 0.3)'
-                    }}
-                  >
-                    <Title level={5} style={{ marginTop: 0 }}>
-                      <StarOutlined /> Final Summary
-                    </Title>
-                    <Text>{selectedCandidate.summary}</Text>
-                  </Card>
-                )}
-                
-                <Divider>Full Transcript</Divider>
-                
-                <div style={{ 
-                  maxHeight: '500px', 
-                  overflowY: 'auto', 
-                  background: '#1a1a1a', 
-                  padding: '20px', 
-                  borderRadius: '12px',
-                  border: '1px solid #333'
-                }}>
-                  <List 
-                    dataSource={selectedCandidate.chatHistory} 
-                    renderItem={(item, index) => (
-                      <List.Item style={{ 
-                        borderBottom: '1px solid #333',
-                        animation: `fadeInUp 0.4s ease-out ${index * 0.05}s backwards`
-                      }}>
-                        <List.Item.Meta 
-                          avatar={
-                            item.author === 'ai' 
-                              ? <Avatar icon={<RobotOutlined />} style={{ backgroundColor: '#722ed1' }} /> 
-                              : <Avatar icon={<UserOutlined />} style={{ backgroundColor: '#1890ff' }} />
-                          } 
-                          title={
-                            <span style={{ color: 'white', fontSize: '15px' }}>
-                              {item.author === 'ai' ? '🤖 CrispHire AI' : `👤 ${selectedCandidate.name}`}
-                            </span>
-                          } 
-                          description={
-                            <div>
-                              <p style={{ color: '#ccc', margin: '8px 0', whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>
-                                {item.text}
-                              </p>
-                              {item.author === 'user' && item.feedback && (
-                                <div style={{ 
-                                  marginTop: '12px', 
-                                  padding: '12px',
-                                  background: 'rgba(255,255,255,0.05)',
-                                  borderRadius: '8px',
-                                  borderLeft: `4px solid ${item.score > 5 ? '#52c41a' : '#ff4d4f'}`
-                                }}>
-                                  <Space direction="vertical" size="small">
-                                    <Tag color={item.score > 5 ? 'success' : 'error'} style={{ fontSize: '13px' }}>
-                                      Score: {item.score}/10
-                                    </Tag>
-                                    <Text style={{ color: '#aaa' }}>{item.feedback}</Text>
-                                  </Space>
-                                </div>
-                              )}
-                            </div>
-                          }
-                        />
-                      </List.Item>
-                    )}
-                  />
-                </div>
-              </Space>
-            </TabPane>
-            
-            <TabPane tab={<span><FileTextOutlined /> Candidate Resume</span>} key="2">
+          <Tabs defaultActiveKey="2" size={isMobile ? 'small' : 'large'}>
+            <TabPane tab={<span><FileTextOutlined /> Resume</span>} key="2">
               <div style={{ 
-                minHeight: '60vh', 
+                minHeight: isMobile ? '50vh' : '60vh', 
+                maxHeight: isMobile ? '70vh' : 'auto',
                 overflowY: 'auto', 
                 background: '#f5f5f5', 
                 display: 'flex', 
                 justifyContent: 'center',
-                padding: '20px',
+                padding: isMobile ? '10px' : '20px',
                 borderRadius: '12px'
               }}>
                 {selectedCandidate.resumeFile?.type === 'application/pdf' ? (
-                  <div style={{ animation: 'scaleIn 0.5s ease-out' }}>
+                  <div style={{ animation: 'scaleIn 0.5s ease-out', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                     <Document 
                       file={selectedCandidate.resumeFile.data} 
                       onLoadSuccess={onDocumentLoadSuccess}
@@ -489,6 +451,7 @@ function InterviewerPage() {
                           pageNumber={index + 1} 
                           renderTextLayer={false} 
                           renderAnnotationLayer={false}
+                          width={isMobile ? Math.min(window.innerWidth - 60, 400) : undefined}
                           style={{ marginBottom: '20px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                         />
                       ))}
@@ -504,6 +467,82 @@ function InterviewerPage() {
                   />
                 )}
               </div>
+            </TabPane>
+            
+            <TabPane tab={<span><RobotOutlined /> Transcript</span>} key="1">
+              <Space direction="vertical" size="large" style={{ width: '100%' }}>
+                {selectedCandidate.summary && (
+                  <Card 
+                    style={{ 
+                      background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)',
+                      border: '1px solid rgba(102, 126, 234, 0.3)'
+                    }}
+                  >
+                    <Title level={5} style={{ marginTop: 0, fontSize: isMobile ? '14px' : '16px' }}>
+                      <StarOutlined /> Final Summary
+                    </Title>
+                    <Text style={{ fontSize: isMobile ? '12px' : '14px' }}>{selectedCandidate.summary}</Text>
+                  </Card>
+                )}
+                
+                <Divider>Full Transcript</Divider>
+                
+                <div style={{ 
+                  maxHeight: isMobile ? '50vh' : '500px', 
+                  overflowY: 'auto', 
+                  background: '#1a1a1a', 
+                  padding: isMobile ? '12px' : '20px', 
+                  borderRadius: '12px',
+                  border: '1px solid #333'
+                }}>
+                  <List 
+                    dataSource={selectedCandidate.chatHistory} 
+                    renderItem={(item, index) => (
+                      <List.Item style={{ 
+                        borderBottom: '1px solid #333',
+                        animation: `fadeInUp 0.4s ease-out ${index * 0.05}s backwards`,
+                        padding: isMobile ? '12px 0' : '16px 0'
+                      }}>
+                        <List.Item.Meta 
+                          avatar={
+                            item.author === 'ai' 
+                              ? <Avatar icon={<RobotOutlined />} style={{ backgroundColor: '#722ed1' }} size={isMobile ? 'small' : 'default'} /> 
+                              : <Avatar icon={<UserOutlined />} style={{ backgroundColor: '#1890ff' }} size={isMobile ? 'small' : 'default'} />
+                          } 
+                          title={
+                            <span style={{ color: 'white', fontSize: isMobile ? '13px' : '15px' }}>
+                              {item.author === 'ai' ? '🤖 CrispHire AI' : `👤 ${selectedCandidate.name}`}
+                            </span>
+                          } 
+                          description={
+                            <div>
+                              <p style={{ color: '#ccc', margin: '8px 0', whiteSpace: 'pre-wrap', lineHeight: '1.6', fontSize: isMobile ? '12px' : '14px' }}>
+                                {item.text}
+                              </p>
+                              {item.author === 'user' && item.feedback && (
+                                <div style={{ 
+                                  marginTop: '12px', 
+                                  padding: isMobile ? '8px' : '12px',
+                                  background: 'rgba(255,255,255,0.05)',
+                                  borderRadius: '8px',
+                                  borderLeft: `4px solid ${item.score > 5 ? '#52c41a' : '#ff4d4f'}`
+                                }}>
+                                  <Space direction="vertical" size="small">
+                                    <Tag color={item.score > 5 ? 'success' : 'error'} style={{ fontSize: isMobile ? '11px' : '13px' }}>
+                                      Score: {item.score}/10
+                                    </Tag>
+                                    <Text style={{ color: '#aaa', fontSize: isMobile ? '11px' : '13px' }}>{item.feedback}</Text>
+                                  </Space>
+                                </div>
+                              )}
+                            </div>
+                          }
+                        />
+                      </List.Item>
+                    )}
+                  />
+                </div>
+              </Space>
             </TabPane>
           </Tabs>
         </Modal>
