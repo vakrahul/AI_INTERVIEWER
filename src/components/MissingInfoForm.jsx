@@ -1,6 +1,6 @@
 import React from 'react';
 import { useDispatch } from 'react-redux';
-import { Form, Input, Button, Card, Typography } from 'antd';
+import { Form, Input, Button, Card, Typography, Alert } from 'antd';
 import { updateCandidateDetails } from '/src/app/interviewSlice.js';
 
 const { Title, Text } = Typography;
@@ -20,13 +20,29 @@ function MissingInfoForm({ candidate }) {
     phone: candidate.phone,
   });
 
+  const missingFields = [];
+  if (!candidate.name) missingFields.push('Name');
+  if (!candidate.email) missingFields.push('Email');
+  if (!candidate.phone) missingFields.push('Phone Number');
+
   return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', paddingTop: '50px' }}>
       <Card style={{ width: 400 }}>
         <Title level={4}>A Few More Details</Title>
-        <Text type="secondary" style={{ display: 'block', marginBottom: 24 }}>
+        <Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>
           We missed some information from your resume. Please fill it in to continue.
         </Text>
+        
+        {missingFields.length > 0 && (
+          <Alert
+            message="Missing Information"
+            description={`We couldn't extract the following from your resume: ${missingFields.join(', ')}. Please provide them below.`}
+            type="warning"
+            showIcon
+            style={{ marginBottom: 24 }}
+          />
+        )}
+
         <Form form={form} layout="vertical" onFinish={onFinish} initialValues={candidate}>
           {!candidate.name && (
             <Form.Item name="name" label="Full Name" rules={[{ required: true, message: 'Please enter your full name' }]}>

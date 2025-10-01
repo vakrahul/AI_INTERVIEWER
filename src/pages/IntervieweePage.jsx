@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Button, Typography, Spin, Select, Radio, Space } from 'antd';
+import { Button, Typography, Spin, Select, Radio, Space, Alert } from 'antd';
+import { RocketOutlined } from '@ant-design/icons';
 import ResumeUploader from '/src/components/ResumeUploader.jsx';
 import ChatWindow from '/src/components/ChatWindow.jsx';
 import MissingInfoForm from '/src/components/MissingInfoForm.jsx';
@@ -14,19 +15,18 @@ function IntervieweePage() {
   const dispatch = useDispatch();
   const { candidates, currentInterview = {} } = useSelector((state) => state.interview);
   const [role, setRole] = useState(null);
-  const [mode, setMode] = useState('chat');
+  const [mode, setMode] = useState('chat'); // 'chat' or 'avatar'
   const [showUploader, setShowUploader] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
-  const [fadeIn, setFadeIn] = useState(false);
 
   const currentCandidate = candidates.find(c => c.id === currentInterview.candidateId);
 
   useEffect(() => {
-    // Show splash screen for 2.5 seconds
+    // Hide splash screen after 3 seconds
     const timer = setTimeout(() => {
       setShowSplash(false);
-      setFadeIn(true);
-    }, 3500);
+    }, 3000);
+
     return () => clearTimeout(timer);
   }, []);
 
@@ -45,69 +45,59 @@ function IntervieweePage() {
         position: 'fixed',
         top: 0,
         left: 0,
-        width: '100vw',
-        height: '100vh',
-        background: 'linear-gradient(135deg, #667eea 0%, #ffffffff 100%)',
+        right: 0,
+        bottom: 0,
+        background: 'linear-gradient(135deg, #fefefeff 0%, #000000ff 100%)',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         zIndex: 9999,
-        animation: 'fadeOut 0.5s ease-out 4s forwards'
+        animation: 'fadeIn 0.5s ease-in'
       }}>
-        <style>
-          {`
-            @keyframes fadeOut {
-              to {
-                opacity: 0;
-                visibility: hidden;
-              }
-            }
-            @keyframes pulse {
-              0%, 100% { transform: scale(1); opacity: 1; }
-              50% { transform: scale(1.05); opacity: 0.8; }
-            }
-            @keyframes slideUp {
-              from {
-                opacity: 0;
-                transform: translateY(30px);
-              }
-              to {
-                opacity: 1;
-                transform: translateY(0);
-              }
-            }
-            @keyframes fadeInScale {
-              from {
-                opacity: 0;
-                transform: scale(0.9);
-              }
-              to {
-                opacity: 1;
-                transform: scale(1);
-              }
-            }
-            @keyframes float {
-              0%, 100% { transform: translateY(0px); }
-              50% { transform: translateY(-20px); }
-            }
-          `}
-        </style>
+        <style>{`
+          @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+          }
+          @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+          }
+          @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+          }
+        `}</style>
         <div style={{
-          fontSize: '72px',
-          marginBottom: '24px',
-          animation: 'pulse 2s ease-in-out infinite'
+          animation: 'float 3s ease-in-out infinite',
+          marginBottom: '32px'
         }}>
-          🤖
+          <RocketOutlined style={{
+            fontSize: '80px',
+            color: 'white',
+            animation: 'pulse 2s ease-in-out infinite'
+          }} />
         </div>
-        <Title level={1} style={{ 
-          color: 'white', 
-          margin: 0,
-          animation: 'slideUp 0.8s ease-out'
+        <Title level={1} style={{
+          color: 'white',
+          marginBottom: '16px',
+          fontSize: '48px',
+          fontWeight: 'bold',
+          textAlign: 'center'
         }}>
-          AI Interview Platform
+          CrispHire AI
         </Title>
-        <Spin size="large" style={{ marginTop: '32px' }} />
+        <Text style={{
+          color: 'rgba(255, 255, 255, 0.9)',
+          fontSize: '18px',
+          marginBottom: '32px'
+        }}>
+          Intelligent Interview Platform
+        </Text>
+        <Spin size="large" style={{ 
+          color: 'white'
+        }} />
       </div>
     );
   }
@@ -125,28 +115,12 @@ function IntervieweePage() {
   // If details are confirmed, show the role and mode selection screen
   if (currentInterview?.status === 'pending' && currentCandidate) {
     return (
-      <div style={{ 
-        textAlign: 'center', 
-        padding: '100px 0',
-        animation: fadeIn ? 'fadeInScale 0.6s ease-out' : 'none'
-      }}>
-        <Title style={{ 
-          color: 'white',
-          animation: 'slideUp 0.6s ease-out'
-        }}>
-          Final Step
-        </Title>
-        <Text style={{ 
-          color: 'gray', 
-          display: 'block', 
-          marginBottom: '32px',
-          animation: 'slideUp 0.6s ease-out 0.1s backwards'
-        }}>
+      <div style={{ textAlign: 'center', padding: '100px 0' }}>
+        <Title style={{ color: 'white' }}>Final Step</Title>
+        <Text style={{ color: 'gray', display: 'block', marginBottom: '32px' }}>
           Please select your role and preferred interview format.
         </Text>
-        <Space direction="vertical" size="large" style={{
-          animation: 'slideUp 0.6s ease-out 0.2s backwards'
-        }}>
+        <Space direction="vertical" size="large">
           <Select
             style={{ width: 240 }}
             placeholder="Select a role"
@@ -156,6 +130,14 @@ function IntervieweePage() {
             <Option value="Frontend Developer">Frontend Developer</Option>
             <Option value="Backend Developer">Backend Developer</Option>
             <Option value="Full Stack Developer">Full Stack Developer</Option>
+            <Option value="Data Scientist">Data Scientist</Option>
+            <Option value="Product Manager">Product Manager</Option>
+            <Option value="UX Designer">UX Designer</Option>
+            <Option value="DevOps Engineer">DevOps Engineer</Option>
+            <Option value="QA Engineer">QA Engineer</Option>
+            <Option value="Mobile Developer">Mobile Developer</Option>
+            <Option value="AI/ML Engineer">AI/ML Engineer</Option>
+            
           </Select>
 
           <Radio.Group onChange={(e) => setMode(e.target.value)} value={mode}>
@@ -163,16 +145,7 @@ function IntervieweePage() {
             <Radio.Button value="avatar">AI Avatar Interview</Radio.Button>
           </Radio.Group>
           
-          <Button 
-            type="primary" 
-            size="large" 
-            onClick={handleStartInterview} 
-            disabled={!role}
-            style={{
-              transition: 'all 0.3s ease',
-              transform: role ? 'scale(1)' : 'scale(0.95)'
-            }}
-          >
+          <Button type="primary" size="large" onClick={handleStartInterview} disabled={!role}>
             Start Interview
           </Button>
         </Space>
@@ -183,44 +156,19 @@ function IntervieweePage() {
   // Before a resume is uploaded, show the welcome screen
   if (!showUploader) {
     return (
-        <div style={{ 
-          textAlign: 'center', 
-          padding: '100px 0',
-          animation: fadeIn ? 'fadeInScale 0.6s ease-out' : 'none'
-        }}>
-            <div style={{
-              fontSize: '64px',
-              marginBottom: '24px',
-              animation: 'float 3s ease-in-out infinite'
-            }}>
-              🤖
-            </div>
-            <Title style={{ 
-              color: 'white',
-              animation: 'slideUp 0.6s ease-out'
-            }}>
-              Welcome to Your AI-Powered Interview
-            </Title>
-            <Text style={{ 
-              color: 'gray', 
-              display: 'block', 
-              maxWidth: '500px', 
-              margin: '16px auto 24px',
-              animation: 'slideUp 0.6s ease-out 0.1s backwards'
-            }}>
+        <div style={{ textAlign: 'center', padding: '100px 0' }}>
+            <Title style={{ color: 'white' }}>Welcome to Your AI-Powered Interview</Title>
+            <Text style={{ color: 'gray', display: 'block', maxWidth: '500px', margin: '16px auto 24px' }}>
               This is an automated interview. Please answer each question within the time limit.
             </Text>
-            <Button 
-              type="primary" 
-              size="large" 
-              onClick={() => setShowUploader(true)}
-              style={{
-                animation: 'slideUp 0.6s ease-out 0.2s backwards',
-                transition: 'transform 0.2s ease',
-              }}
-              onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
-              onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
-            >
+            <Alert 
+              message="Pro Tip for Best Performance"
+              description="If the AI fails to process your resume, try selecting a different AI model (like Gemini 2.5 Pro or Gemini 2.5 flash) from the dropdown on the Interviewer Dashboard before uploading."
+              type="info"
+              showIcon
+              style={{maxWidth: '500px', margin: '0 auto 24px', textAlign: 'left'}}
+            />
+            <Button type="primary" size="large" onClick={() => setShowUploader(true)}>
               Begin
             </Button>
       </div>
@@ -228,11 +176,7 @@ function IntervieweePage() {
   }
 
   // After clicking "Begin", show the resume uploader
-  return (
-    <div style={{ animation: fadeIn ? 'fadeInScale 0.6s ease-out' : 'none' }}>
-      <ResumeUploader />
-    </div>
-  );
+  return <ResumeUploader />;
 }
 
 export default IntervieweePage;

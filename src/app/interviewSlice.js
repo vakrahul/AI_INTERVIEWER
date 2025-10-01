@@ -7,7 +7,10 @@ export const processAnswer = createAsyncThunk(
     dispatch(addMessageToHistory({ candidateId, message: { author: 'user', text: answer } }));
     
     const state = getState().interview;
-    if (state.currentInterview.timer > 0) {
+    // The first two AI questions are conversational and have no timer. Only scored questions are evaluated.
+    const isScoredQuestion = state.currentInterview.aiQuestionCount >= 2;
+
+    if (isScoredQuestion) {
       const evaluation = await evaluateAnswer(question, answer, state.selectedModel);
       dispatch(addEvaluationToAnswer({ candidateId, answerText: answer, evaluation }));
     }
@@ -35,9 +38,10 @@ const initialState = {
     currentQuestion: null,
     timer: 0,
     isAiSpeaking: false,
-    interviewMode: 'chat', // 'chat' or 'avatar'
+    interviewMode: 'chat',
+    aiQuestionCount: 0,
   },
-  selectedModel: 'gemini-pro',
+  selectedModel: 'gemini-1.5-pro-latest',
 };
 
 const interviewSlice = createSlice({
@@ -72,7 +76,7 @@ const interviewSlice = createSlice({
       state.selectedModel = action.payload;
     },
     setInterviewMode: (state, action) => {
-      state.currentInterview.interviewMode = action.payload;
+        state.currentInterview.interviewMode = action.payload;
     },
     startInterview: (state, action) => {
       state.currentInterview.status = 'active';
@@ -80,6 +84,7 @@ const interviewSlice = createSlice({
       const firstQuestion = "Thank you. To begin, could you please tell me a little bit about yourself and your experience?";
       state.currentInterview.currentQuestion = firstQuestion;
       state.currentInterview.timer = 0;
+      state.currentInterview.aiQuestionCount = 1;
       const candidate = state.candidates.find(c => c.id === action.payload.candidateId);
       if (candidate) {
         candidate.chatHistory.push({ author: 'ai', text: firstQuestion });
@@ -88,7 +93,12 @@ const interviewSlice = createSlice({
     addMessageToHistory: (state, action) => {
       const { candidateId, message } = action.payload;
       const candidate = state.candidates.find(c => c.id === candidateId);
-      if (candidate) { candidate.chatHistory.push(message); }
+      if (candidate) { 
+        candidate.chatHistory.push(message); 
+        if (message.author === 'ai') {
+          state.currentInterview.aiQuestionCount += 1;
+        }
+      }
     },
     addEvaluationToAnswer: (state, action) => {
       const { candidateId, answerText, evaluation } = action.payload;
