@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Table, Typography, Input, Select, Button, Space, Card, Row, Col, Empty, Modal, Tag, List, Avatar, Tabs, Alert } from 'antd';
+import { Table, Typography, Input, Select, Button, Space, Card, Row, Col, Empty, Modal, Tag, List, Avatar, Tabs, Alert, message } from 'antd';
 import { UserOutlined, RobotOutlined, CheckCircleOutlined, ClockCircleOutlined, StarOutlined, PlusOutlined, DownloadOutlined } from '@ant-design/icons';
 import { Document, Page, pdfjs } from 'react-pdf';
 import StatCard from '/src/components/StatCard.jsx';
@@ -21,6 +21,23 @@ function InterviewerPage() {
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [numPages, setNumPages] = useState(null);
   const [pdfError, setPdfError] = useState(null);
+
+  // Welcome back message on component mount/refresh
+  useEffect(() => {
+    const hasVisited = sessionStorage.getItem('hasVisitedInterviewer');
+    
+    if (hasVisited) {
+      message.success({
+        content: 'Welcome back! 👋',
+        duration: 3,
+        style: {
+          marginTop: '20vh',
+        },
+      });
+    } else {
+      sessionStorage.setItem('hasVisitedInterviewer', 'true');
+    }
+  }, []);
 
   const onDocumentLoadSuccess = ({ numPages }) => {
     setNumPages(numPages);
