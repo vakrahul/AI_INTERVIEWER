@@ -38,7 +38,6 @@ export async function generateNextInterviewStep(role, resumeText, chatHistory, m
 
   let difficulty = 'Easy';
   let time = 20;
-
   if (technicalQuestionCount >= 2 && technicalQuestionCount < 4) {
     difficulty = 'Medium';
     time = 60;
@@ -47,31 +46,47 @@ export async function generateNextInterviewStep(role, resumeText, chatHistory, m
     time = 120;
   }
 
+  // Extract previously asked questions to avoid repetition
+  const previousQuestions = chatHistory
+    .filter(m => m.author === 'ai' && m.content)
+    .map(m => m.content)
+    .join('\n');
+
   const prompt = `
-    You are a professional AI Interviewer for a "${role}" position. Your tone is insightful and challenging.
-    The interview flow is: 1) A conversational intro (1-2 questions). 2) A transition message. 3) Exactly 6 scored technical/behavioral questions. 4) A conclusion.
+You are a professional AI Interviewer for a "${role}" position. Your tone is insightful and challenging.
 
-    **Current State:**
-    - Total AI messages sent (including the initial intro): ${aiQuestionCount}.
-    - Number of the 6 main technical questions asked so far: ${technicalQuestionCount}.
-    
-    **YOUR IMMEDIATE TASK: Generate the JSON for the next step based on the rules.**
+The interview flow is:
+1) A conversational intro (1-2 questions).
+2) A transition message.
+3) Exactly 6 scored technical/behavioral questions.
+4) A conclusion.
 
-    **RULES (Follow Strictly):**
-    1.  **If the candidate's last answer was short, nonsensical, or empty, IGNORE IT. Your primary goal is to follow the sequence.**
-    2.  **If \`aiQuestionCount\` is 1:** Ask **one** brief, conversational follow-up to the user's self-introduction. The JSON "type" **MUST** be "conversation", and "time" **MUST** be 0.
-    3.  **If \`aiQuestionCount\` is 2:** The intro is complete. You **MUST** provide a transition message immediately followed by the first **Easy** technical question. Example: "Great, thank you. We will now begin the 6 scored questions. First, ...[Your Easy Question]...". The "type" **MUST** be "question", and "time" **MUST** be 20.
-    4.  **If \`aiQuestionCount\` is > 2 and \`technicalQuestionCount\` < 6:** Generate Question #${technicalQuestionCount + 1}. This question **MUST** be of **'${difficulty}'** difficulty. The "type" **MUST** be "question", and "time" **MUST** be ${time}.
-    5.  **If \`technicalQuestionCount\` >= 6:** The main questions are finished. You **MUST** conclude. The "type" **MUST** be "conclusion".
-    6.  Your entire response **MUST** be a clean JSON object with "type", "content", and "time".
+**Current State:**
+- Total AI messages sent (including the initial intro): ${aiQuestionCount}.
+- Number of the 6 main technical questions asked so far: ${technicalQuestionCount}.
 
-    **CONTEXT:**
-    - Resume: ${resumeText}
-    - History: ${JSON.stringify(chatHistory)}
+**PREVIOUSLY ASKED QUESTIONS (DO NOT REPEAT ANY OF THESE):**
+${previousQuestions}
 
-    Generate the required JSON object now.
-  `;
-  
+**YOUR IMMEDIATE TASK: Generate the JSON for the next step based on the rules.**
+
+**RULES (Follow Strictly):**
+1.  **If the candidate's last answer was short, nonsensical, or empty, IGNORE IT. Your primary goal is to follow the sequence.**
+2.  **If \`aiQuestionCount\` is 1:** Ask **one** brief, conversational follow-up to the user's self-introduction. The JSON "type" **MUST** be "conversation", and "time" **MUST** be 0.
+3.  **If \`aiQuestionCount\` is 2:** The intro is complete. You **MUST** provide a transition message immediately followed by the first **Easy** technical question. Example: "Great, thank you. We will now begin the 6 scored questions. First, ...[Your Easy Question]...". The "type" **MUST** be "question", and "time" **MUST** be 20.
+4.  **If \`aiQuestionCount\` is > 2 and \`technicalQuestionCount\` < 6:** Generate Question #${technicalQuestionCount + 1}. This question **MUST** be of **'${difficulty}'** difficulty and **MUST BE COMPLETELY DIFFERENT** from all previously asked questions listed above. The "type" **MUST** be "question", and "time" **MUST** be ${time}.
+5.  **If \`technicalQuestionCount\` >= 6:** The main questions are finished. You **MUST** conclude. The "type" **MUST** be "conclusion".
+6.  Your entire response **MUST** be a clean JSON object with "type", "content", and "time".
+
+**IMPORTANT: Ensure your new question is UNIQUE and does NOT repeat or rephrase any of the previously asked questions.**
+
+**CONTEXT:**
+- Resume: ${resumeText}
+- History: ${JSON.stringify(chatHistory)}
+
+Generate the required JSON object now.
+`;
+
   try {
     const result = await model.generateContent(prompt);
     const textResponse = result.response.text();
@@ -80,11 +95,19 @@ export async function generateNextInterviewStep(role, resumeText, chatHistory, m
       return JSON.parse(jsonMatch[0]);
     } else {
       console.error("AI did not return valid JSON for the next step:", textResponse);
-      return { type: 'conclusion', content: "It seems we've reached the end of our time. Thank you.", time: 0 };
+      return {
+        type: 'conclusion',
+        content: "It seems we've reached the end of our time. Thank you.",
+        time: 0
+      };
     }
   } catch (error) {
     console.error("Error generating next interview step:", error);
-    return { type: 'conclusion', content: "There was an API error, so we'll have to end the interview here. Thank you.", time: 0 };
+    return {
+      type: 'conclusion',
+      content: "There was an API error, so we'll have to end the interview here. Thank you.",
+      time: 0
+    };
   }
 }
 
